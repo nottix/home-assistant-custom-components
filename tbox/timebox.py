@@ -33,6 +33,7 @@ class TimeBox:
     socket = None
     messages = None
     message_buf = []
+    currentHost = None
 
     def __init__(self):
         self.messages = TimeBoxMessages()
@@ -43,9 +44,10 @@ class TimeBox:
         # Create the client socket
         if host is None:
             host = self.DEFAULTHOST
+        self.currentHost = host
         #print("connecting to %s at %s" % (self.host, self.port))
         self.socket = BluetoothSocket(RFCOMM)
-        self.socket.connect((host, port))
+        self.socket.connect((currentHost, port))
         self.socket.setblocking(0)
 
     def close(self):
@@ -65,13 +67,26 @@ class TimeBox:
 
     def send_raw(self, data):
         """Send raw data to the TimeBox."""
-        return self.socket.send(data)
+        while (1):
+            msg = self.messages.make_message(payload)
+            try:
+                return self.socket.send(data)
+            except bluetooth.btcommon.BluetoothError as error:
+                print(e)
+                time.sleep(5)
+                self.connect(self.currentHost);
 
     def send_payload(self, payload):
         """Send raw payload to the TimeBox. (Will be escaped, checksumed and
         messaged between 0x01 and 0x02."""
-        msg = self.messages.make_message(payload)
-        return self.socket.send(bytes(msg))
+        while (1):
+            msg = self.messages.make_message(payload)
+            try:
+                return self.socket.send(bytes(msg))
+            except bluetooth.btcommon.BluetoothError as error:
+                print(e)
+                time.sleep(5)
+                self.connect(self.currentHost);
 
     def set_time(self, time=None):
       if not time:
