@@ -17,7 +17,8 @@ from homeassistant.const import CONF_MAC
 
 REQUIREMENTS = ['PyBluez==0.22',
                 'colour==0.1.5',
-                'pillow']
+                'pillow',
+                'webcolors']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,16 +60,16 @@ class TimeBoxNotificationService(BaseNotificationService):
         self._mac = mac
         self._image_dir = image_dir
         self._font_dir = font_dir
-        self._timebox = TimeBox()
-        self._timebox.connect(host=mac)
         if not os.path.isdir(image_dir):
             _LOGGER.error("image_dir {0} does not exist, timebox will not work".format(image_dir))
         if not os.path.isdir(font_dir):
             _LOGGER.error("font_dir {0} does not exist, timebox will not work".format(font_dir))
 
-        self._timebox.set_time()
-        color = [120, 0, 0]
-        self._timebox.show_clock(color=color)
+        self._timebox = TimeBox(_LOGGER)
+        #self._timebox.connect(host=mac)
+        # self._timebox.set_time()
+        # color = [120, 0, 0]
+        # self._timebox.show_clock(color=color)
 
     def display_anim_file(self, fn, frame_delay=1):
         self._timebox.show_animated_image(fn, frame_delay)
@@ -90,10 +91,18 @@ class TimeBoxNotificationService(BaseNotificationService):
         else:
             _LOGGER.error("Invalid image data received")
 
+    def hex2rgb(self, hexcode):
+        import webcolors
+        rgb = webcolors.hex_to_rgb(hexcode)
+        return list(rgb)
+
     def valid_color(self, color):
         """Verifies a color is valid
         (Array of three ints, range 0-15)"""
         valid = False
+        if isinstance(color, str):
+            self.hex2rgb(color)
+            valid = True
         if (isinstance(color, list) and len(color) == 3):
             valid = True
             for chan in color:
@@ -171,7 +180,9 @@ class TimeBoxNotificationService(BaseNotificationService):
 
         elif data.get(PARAM_MODE) == "clock":
             color = data.get(PARAM_COLOR)
-            if self.valid_color(color):
+            if isinstance(color, str):
+                color = self.hex2rgb(color)
+            elif self.valid_color(color):
                 color = self.convert_color(color)
             else:
                 color = [255, 255, 255]

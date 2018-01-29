@@ -2,6 +2,7 @@
 
 import select
 from bluetooth import BluetoothSocket, RFCOMM
+import bluetooth
 from .messages import TimeBoxMessages
 from .divoom_image import DivoomImage
 import datetime
@@ -35,20 +36,25 @@ class TimeBox:
     message_buf = []
     currentHost = None
 
-    def __init__(self):
+    def __init__(self, logger):
         self.messages = TimeBoxMessages()
         self.divoomImage = DivoomImage()
+        self.logger = logger
 
     def connect(self, host=None, port=4):
         """Open a connection to the TimeBox."""
+        #try:
         # Create the client socket
         if host is None:
             host = self.DEFAULTHOST
         self.currentHost = host
+        self.logger.info('Connecting to {0}'.format(self.currentHost))
         #print("connecting to %s at %s" % (self.host, self.port))
         self.socket = BluetoothSocket(RFCOMM)
-        self.socket.connect((currentHost, port))
+        self.socket.connect((self.currentHost, port))
         self.socket.setblocking(0)
+        #except Exception as error:
+        #    self.logger.exception('Error while connecting to timebox')
 
     def close(self):
         """Closes the connection to the TimeBox."""
@@ -71,8 +77,9 @@ class TimeBox:
             msg = self.messages.make_message(payload)
             try:
                 return self.socket.send(data)
-            except bluetooth.btcommon.BluetoothError as error:
-                print(e)
+            except Exception as error:
+                print(error)
+                self.logger.exception('Error while sending paylod, reconnecting...')
                 time.sleep(5)
                 self.connect(self.currentHost);
 
@@ -80,11 +87,13 @@ class TimeBox:
         """Send raw payload to the TimeBox. (Will be escaped, checksumed and
         messaged between 0x01 and 0x02."""
         while (1):
+            self.logger.info('Sending paylod')
             msg = self.messages.make_message(payload)
             try:
                 return self.socket.send(bytes(msg))
-            except bluetooth.btcommon.BluetoothError as error:
-                print(e)
+            except Exception as error:
+                print(error)
+                self.logger.exception('Error while sending paylod, reconnecting...')
                 time.sleep(5)
                 self.connect(self.currentHost);
 
