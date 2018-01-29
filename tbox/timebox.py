@@ -36,18 +36,20 @@ class TimeBox:
     message_buf = []
     currentHost = None
 
-    def __init__(self, logger):
+    def __init__(self, logger, host):
         self.messages = TimeBoxMessages()
         self.divoomImage = DivoomImage()
         self.logger = logger
+        self.host = host
 
     def connect(self, host=None, port=4):
         """Open a connection to the TimeBox."""
         #try:
         # Create the client socket
-        if host is None:
-            host = self.DEFAULTHOST
-        self.currentHost = host
+        # if host is None:
+        #     self.logger.info('Host is none, so using default..')
+        #     host = self.DEFAULTHOST
+        self.currentHost = self.host
         self.logger.info('Connecting to {0}'.format(self.currentHost))
         #print("connecting to %s at %s" % (self.host, self.port))
         self.socket = BluetoothSocket(RFCOMM)

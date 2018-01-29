@@ -65,8 +65,8 @@ class TimeBoxNotificationService(BaseNotificationService):
         if not os.path.isdir(font_dir):
             _LOGGER.error("font_dir {0} does not exist, timebox will not work".format(font_dir))
 
-        self._timebox = TimeBox(_LOGGER)
-        #self._timebox.connect(host=mac)
+        self._timebox = TimeBox(_LOGGER, host=mac)
+        self._timebox.connect()
         # self._timebox.set_time()
         # color = [120, 0, 0]
         # self._timebox.show_clock(color=color)
